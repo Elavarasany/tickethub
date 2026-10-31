@@ -1,5 +1,5 @@
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE_URL = window.location.origin;
 
 const API = {
     events: `${API_BASE}/events`,
