@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Hub - Admin Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+    <script src="/date-utils.js"></script>
+    <script src="admin.js" defer></script>
+</head>
+
+<body>
+<div class="admin-container">
+
+    <aside class="sidebar">
+        <h2>TICKET HUB</h2>
+        <p class="sidebar-label">DATABASE</p>
+
+        <button class="table-btn active" data-table="events">Events</button>
+        <button class="table-btn" data-table="event_slots">Event Slots</button>
+        <button class="table-btn" data-table="seats">Seats</button>
+        <button class="table-btn" data-table="bookings">Bookings</button>
+    </aside>
+
+    <main class="main-content">
+
+        <div class="header">
+            <div>
+                <h1 id="tableTitle">Events</h1>
+                <p id="recordCount">Loading records...</p>
+            </div>
+
+            <div class="header-actions">
+                <button id="refreshBtn" type="button">Refresh</button>
+                <button id="addRecordBtn" type="button">+ Add Record</button>
+            </div>
+        </div>
+
+        <div id="message"></div>
+
+        <!-- BULK SEAT GENERATOR -->
+        <div id="seatGenerator" class="seat-generator" style="display:none;">
+            <h3>Bulk Seat Generator</h3>
+
+            <form id="generateSeatsForm">
+                <div class="generator-grid">
+
+                    <div>
+                        <label>Event ID</label>
+                        <input type="number" id="genEventId" min="1" required>
+                    </div>
+
+                    <div>
+                        <label>Event Date</label>
+                        <input
+                                type="text"
+                                id="genDate"
+                                placeholder="DD/MM/YYYY"
+                                pattern="\d{2}/\d{2}/\d{4}"
+                                inputmode="numeric"
+                                required
+                        >
+                    </div>
+
+                    <div>
+                        <label>Event Time</label>
+                        <input
+                                type="text"
+                                id="genTime"
+                                placeholder="06:00 PM"
+                                pattern="(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM|am|pm)"
+                                title="Enter time in format 06:00 PM"
+                                required
+                        >
+                    </div>
+
+                    <div>
+                        <label>Row Name</label>
+                        <input type="text" id="genRowName"
+                               placeholder="A" pattern="[A-Za-z]+" required>
+                    </div>
+
+                    <div>
+                        <label>Number of Seats</label>
+                        <input type="number" id="genSeatCount"
+                               min="1" max="500" placeholder="10" required>
+                    </div>
+
+                    <div>
+                        <label>Ticket Price (₹)</label>
+                        <input type="number" id="genPrice"
+                               min="0" step="0.01" placeholder="250" required>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="generate-btn">
+                    Generate Seats
+                </button>
+
+                <p id="generatorMessage"></p>
+            </form>
+        </div>
+
+        <!-- ADD RECORD FORM -->
+        <div id="addRecordForm" class="add-record-form" style="display:none;"></div>
+
+        <!-- DATABASE TABLE -->
+        <section class="table-container">
+            <table id="dataTable">
+                <thead>
+                <tr id="tableHead"></tr>
+                </thead>
+
+                <tbody id="tableBody">
+                <tr>
+                    <td>Loading records...</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+</body>
+</html>

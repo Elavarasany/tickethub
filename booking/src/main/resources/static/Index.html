@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TICKET HUB | Event Booking</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="#" class="logo" onclick="showPage('home')">
+        TICKET<span>HUB</span><b>.</b>
+    </a>
+
+    <nav class="nav-links" id="navLinks">
+        <a href="#" class="nav-item active" data-page="home">Home</a>
+        <a href="#" class="nav-item" data-page="movies">Movies</a>
+        <a href="#" class="nav-item" data-page="music">Music</a>
+        <a href="#" class="nav-item" data-page="sports">Sports</a>
+        <a href="#" class="nav-item" data-page="bookings">My Bookings</a>
+    </nav>
+
+    <button class="login-btn" onclick="showPage('bookings')">My Tickets ↗</button>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+</header>
+
+<main>
+
+    <section id="home" class="page active">
+        <div class="hero">
+            <div class="hero-content">
+                <span class="eyebrow">YOUR NEXT EXPERIENCE STARTS HERE</span>
+                <h1>Life is better<br>with <span>live experiences.</span></h1>
+                <p>Discover movies, concerts and sporting events. Book your favourite seats in seconds.</p>
+                <button class="primary-btn" onclick="showPage('movies')">Explore Events →</button>
+            </div>
+            <div class="hero-decoration">
+                <div class="hero-circle">TH</div>
+                <span class="floating-tag">BOOK. EXPERIENCE. REPEAT.</span>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <span>⌕</span>
+                <input type="text" id="homeSearch" placeholder="Search movies, concerts, sports events...">
+                <button onclick="searchEvents()">Search Events</button>
+            </div>
+        </div>
+
+        <section class="content-section">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">EXPLORE</span>
+                    <h2>Find your experience</h2>
+                </div>
+            </div>
+
+            <div class="category-grid">
+                <div class="category-card" onclick="showPage('movies')">
+                    <div class="category-icon">🎬</div>
+                    <div><h3>Movies</h3><p>Watch the latest blockbusters</p></div>
+                    <span class="category-arrow">↗</span>
+                </div>
+
+                <div class="category-card" onclick="showPage('music')">
+                    <div class="category-icon">🎵</div>
+                    <div><h3>Music</h3><p>Feel the rhythm live</p></div>
+                    <span class="category-arrow">↗</span>
+                </div>
+
+                <div class="category-card" onclick="showPage('sports')">
+                    <div class="category-icon">🏆</div>
+                    <div><h3>Sports</h3><p>Experience the action</p></div>
+                    <span class="category-arrow">↗</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <div class="section-heading">
+                <h2>Trending events</h2>
+                <button class="text-btn" onclick="showPage('movies')">View all →</button>
+            </div>
+            <div class="event-grid" id="trendingEvents"></div>
+        </section>
+
+        <section class="content-section">
+            <div class="section-heading"><h2>Upcoming events</h2></div>
+            <div class="event-grid" id="upcomingEvents"></div>
+        </section>
+    </section>
+
+    <section id="movies" class="page category-page">
+        <div class="page-banner">
+            <span class="eyebrow">THE BIG SCREEN AWAITS</span>
+            <h1>Movies</h1>
+            <p>Find your next favourite film.</p>
+        </div>
+        <div class="content-section">
+            <div class="filter-bar">
+                <input type="text" id="movieSearch" placeholder="Search movies...">
+                <select id="movieFilter">
+                    <option value="all">All genres</option>
+                    <option value="Action">Action</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Thriller">Thriller</option>
+                </select>
+            </div>
+            <div class="event-grid" id="movieEvents"></div>
+        </div>
+    </section>
+
+    <section id="music" class="page category-page">
+        <div class="page-banner">
+            <span class="eyebrow">FEEL THE ENERGY</span>
+            <h1>Music Concerts</h1>
+            <p>Discover artists and unforgettable live performances.</p>
+        </div>
+        <div class="content-section">
+            <div class="filter-bar">
+                <input type="text" id="musicSearch" placeholder="Search concerts or artists...">
+            </div>
+            <div class="event-grid" id="musicEvents"></div>
+        </div>
+    </section>
+
+    <section id="sports" class="page category-page">
+        <div class="page-banner">
+            <span class="eyebrow">THE GAME IS ON</span>
+            <h1>Sports Events</h1>
+            <p>Be there when the action happens.</p>
+        </div>
+        <div class="content-section">
+            <div class="filter-bar">
+                <input type="text" id="sportsSearch" placeholder="Search matches or teams...">
+            </div>
+            <div class="event-grid" id="sportsEvents"></div>
+        </div>
+    </section>
+
+    <section id="eventDetails" class="page">
+        <div class="content-section">
+            <button class="back-btn" onclick="goBack()">← Back to events</button>
+            <div id="eventDetailContent"></div>
+        </div>
+    </section>
+
+    <section id="seatPage" class="page">
+        <div class="content-section">
+            <button class="back-btn" onclick="showPage('eventDetails')">← Back to event</button>
+
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">CHOOSE YOUR SPOT</span>
+                    <h2>Select your seats</h2>
+                    <p id="seatEventInfo"></p>
+                </div>
+            </div>
+
+            <div class="seat-layout">
+                <div class="stage" id="stageLabel">SCREEN / STAGE</div>
+                <div class="seat-legend">
+                    <span><i class="legend-seat available"></i> Available</span>
+                    <span><i class="legend-seat selected"></i> Selected</span>
+                    <span><i class="legend-seat booked"></i> Booked</span>
+                    <span><i class="legend-seat premium"></i> Premium</span>
+                </div>
+                <div id="seatContainer" class="seat-container"></div>
+            </div>
+
+            <div class="booking-summary">
+                <div><span class="summary-label">Selected seats</span><strong id="selectedSeats">None</strong></div>
+                <div><span class="summary-label">Tickets</span><strong id="ticketCount">0</strong></div>
+                <div><span class="summary-label">Total amount</span><strong class="total-price" id="totalPrice">₹0</strong></div>
+                <button class="primary-btn" id="continueBtn" disabled onclick="goToCustomer()">Continue →</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="customerPage" class="page">
+        <div class="content-section narrow-section">
+            <button class="back-btn" onclick="showPage('seatPage')">← Back to seats</button>
+            <span class="eyebrow">ALMOST THERE</span>
+            <h2>Customer details</h2>
+            <p class="muted">Enter your details to complete your booking.</p>
+
+            <div class="checkout-grid">
+                <form id="customerForm" class="customer-form">
+                    <label>Full name</label>
+                    <input type="text" id="customerName" placeholder="Enter your full name" required minlength="2">
+
+                    <label>Email address</label>
+                    <input type="email" id="customerEmail" placeholder="example@email.com" required>
+
+                    <label>Mobile number</label>
+                    <input type="tel" id="customerPhone" placeholder="10-digit mobile number" pattern="[6-9][0-9]{9}" required>
+
+                    <p id="formError" class="error-message"></p>
+                    <button type="submit" class="primary-btn full-btn" id="confirmBtn">Confirm Booking →</button>
+                </form>
+
+                <div class="checkout-summary">
+                    <h3>Booking summary</h3>
+                    <div id="checkoutSummary"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="receiptPage" class="page">
+        <div class="content-section receipt-section">
+            <div class="success-header">
+                <div class="success-icon">✓</div>
+                <h2>Booking confirmed!</h2>
+                <p>Your tickets are ready. Have a great experience.</p>
+            </div>
+
+            <div class="receipt-card" id="receiptContent"></div>
+
+            <div class="receipt-actions">
+                <button class="primary-btn" onclick="downloadReceipt()">Download Receipt ↓</button>
+                <button class="secondary-btn" onclick="window.print()">Print Ticket</button>
+                <button class="secondary-btn" onclick="showPage('home')">Back to Home</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="bookings" class="page">
+        <div class="page-banner">
+            <span class="eyebrow">YOUR EXPERIENCES</span>
+            <h1>My Bookings</h1>
+            <p>All your tickets, together in one place.</p>
+        </div>
+        <div class="content-section">
+            <div class="filter-bar">
+                <input type="email" id="bookingEmail" placeholder="Enter your booking email">
+                <button class="primary-btn" onclick="loadBookings()">Find Bookings</button>
+            </div>
+            <p id="bookingMessage" class="muted"></p>
+            <div id="bookingList" class="booking-list"></div>
+        </div>
+    </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<footer class="footer">
+    <div class="footer-top">
+        <a href="#" class="logo" onclick="showPage('home')">TICKET<span>HUB</span><b>.</b></a>
+        <p>Making every experience unforgettable.</p>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 TICKET HUB. All rights reserved.</p>
+        <p>Discover. Book. Experience.</p>
+    </div>
+</footer>
+
+<script src="/date-utils.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
