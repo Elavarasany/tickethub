@@ -3,12 +3,12 @@ FROM eclipse-temurin:27-jdk AS build
 
 WORKDIR /app
 
-COPY booking/.mvn .mvn/
-COPY booking/mvnw pom.xml ./
+COPY .mvn .mvn/
+COPY mvnw pom.xml ./
 
 RUN chmod +x mvnw
 
-COPY booking/src ./src
+COPY src ./src
 
 RUN ./mvnw -B clean package -DskipTests
 
