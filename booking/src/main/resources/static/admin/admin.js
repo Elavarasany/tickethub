@@ -712,7 +712,9 @@ function createInput(column) {
         input.type = "email";
 
     } else if (name.includes("url") || name.includes("image")) {
-        input.type = "url";
+        input.type = "text";
+        input.placeholder = "Enter image URL";
+    }
 
     } else {
         input.type = "text";
