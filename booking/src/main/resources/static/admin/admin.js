@@ -691,13 +691,11 @@ function createInput(column) {
         input.placeholder = "DD/MM/YYYY";
         input.autocomplete = "off";
         input.inputMode = "numeric";
-        input.pattern = "\\d{2}/\\d{2}/\\d{4}";
 
     } else if (isTimeColumn(column)) {
         input.type = "text";
         input.placeholder = "HH:MM AM/PM";
         input.autocomplete = "off";
-        input.pattern = "(0?[1-9]|1[0-2]):[0-5][0-9]\\s?(AM|PM|am|pm)";
 
     } else if (
         name.includes("price") ||
@@ -714,7 +712,8 @@ function createInput(column) {
     } else if (name.includes("url") || name.includes("image")) {
         input.type = "text";
         input.placeholder = "Enter image URL";
-    }
+        input.readOnly = false;
+        input.disabled = false;
 
     } else {
         input.type = "text";
