@@ -5,14 +5,20 @@ const API = {
     events: `${API_BASE_URL}/api/events`,
     event: id => `${API_BASE_URL}/api/events/${id}`,
     dates: id => `${API_BASE_URL}/api/events/${id}/dates`,
+
     slots: (id, date) =>
         `${API_BASE_URL}/api/events/${id}/slots?date=${encodeURIComponent(date)}`,
+
     seats: (id, date, time) =>
-        `${API_BASE_URL}/api/seats/availability?eventId=${id}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
-    bookings: `${API_BASE_URL}/bookings`,
-    booking: id => `${API_BASE_URL}/bookings/${id}`,
+        `${API_BASE_URL}/api/seats/availability?eventId=${encodeURIComponent(id)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
+
+    bookings: `${API_BASE_URL}/api/bookings`,
+
+    booking: id =>
+        `${API_BASE_URL}/api/bookings/${encodeURIComponent(id)}`,
+
     customerBookings: email =>
-        `${API_BASE_URL}/bookings?email=${encodeURIComponent(email)}`
+        `${API_BASE_URL}/api/bookings?email=${encodeURIComponent(email)}`
 };
 
 let events = [];
@@ -44,21 +50,15 @@ function money(value) {
     return "₹" + Number(value || 0).toLocaleString("en-IN");
 }
 
-// Always display dates as DD/MM/YYYY.
-// Accepts YYYY-MM-DD or DD/MM/YYYY.
 function formatDate(dateValue) {
     if (!dateValue) return "";
 
     const value = String(dateValue).trim().split("T")[0];
 
-    // Already DD/MM/YYYY
     const displayMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
 
-    if (displayMatch) {
-        return value;
-    }
+    if (displayMatch) return value;
 
-    // Database/API format: YYYY-MM-DD
     const databaseMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
 
     if (databaseMatch) {
@@ -68,7 +68,6 @@ function formatDate(dateValue) {
     return value;
 }
 
-// Convert database date into a local Date object for weekday display.
 function parseLocalDate(dateValue) {
     const value = String(dateValue || "").trim().split("T")[0];
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -82,7 +81,6 @@ function parseLocalDate(dateValue) {
     );
 }
 
-// Convert 24-hour database time into 12-hour display time.
 function formatBookingTime(time) {
     if (!time) return "";
 
@@ -106,25 +104,26 @@ async function apiRequest(url, options = {}) {
     const response = await fetch(url, {
         ...options,
         headers: {
-            "Content-Type": "application/json",
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
             ...options.headers
         }
     });
 
-    const text = await response.text();
+    const responseText = await response.text();
+
     let data = null;
 
     try {
-        data = text ? JSON.parse(text) : null;
+        data = responseText ? JSON.parse(responseText) : null;
     } catch {
-        data = text;
+        data = responseText;
     }
 
     if (!response.ok) {
         const message =
             typeof data === "string"
                 ? data
-                : data?.message || data?.error || "Request failed";
+                : data?.message || data?.error || `HTTP ${response.status}`;
 
         throw new Error(message);
     }
@@ -134,6 +133,7 @@ async function apiRequest(url, options = {}) {
 
 function showToast(message, type = "success") {
     const toast = $("toast");
+
     if (!toast) return;
 
     toast.textContent = message;
@@ -154,25 +154,27 @@ function showPage(pageId) {
     });
 
     const page = $(pageId);
-    if (!page) return;
+
+    if (!page) {
+        console.error("Page not found:", pageId);
+        return;
+    }
 
     page.classList.add("active");
 
     document.querySelectorAll(".nav-item").forEach(item => {
-        item.classList.toggle("active", item.dataset.page === pageId);
+        item.classList.toggle(
+            "active",
+            item.dataset.page === pageId
+        );
     });
 
-    const navLinks = document.querySelector(".nav-links");
+    document.querySelector(".nav-links")?.classList.remove("open");
 
-    if (navLinks) {
-        navLinks.classList.remove("open");
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    if (pageId === "bookings") {
-        $("bookingEmail")?.focus();
-    }
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
 
 function goBack() {
@@ -185,11 +187,9 @@ function goBack() {
 
 async function loadEvents() {
     try {
-        events = await apiRequest(API.events);
+        const result = await apiRequest(API.events);
 
-        if (!Array.isArray(events)) {
-            events = [];
-        }
+        events = Array.isArray(result) ? result : [];
 
         renderAllEvents();
 
@@ -203,9 +203,20 @@ function renderAllEvents() {
     renderEventList("trendingEvents", events.slice(0, 3));
     renderEventList("upcomingEvents", events.slice(3, 6));
 
-    renderEventList("movieEvents", events.filter(e => isCategory(e, "movie")));
-    renderEventList("musicEvents", events.filter(e => isCategory(e, "music")));
-    renderEventList("sportsEvents", events.filter(e => isCategory(e, "sport")));
+    renderEventList(
+        "movieEvents",
+        events.filter(e => isCategory(e, "movie"))
+    );
+
+    renderEventList(
+        "musicEvents",
+        events.filter(e => isCategory(e, "music"))
+    );
+
+    renderEventList(
+        "sportsEvents",
+        events.filter(e => isCategory(e, "sport"))
+    );
 }
 
 function isCategory(event, category) {
@@ -220,10 +231,12 @@ function isCategory(event, category) {
 
 function renderEventList(containerId, list) {
     const container = $(containerId);
+
     if (!container) return;
 
     if (!list || list.length === 0) {
-        container.innerHTML = `<p class="empty-message">No events available.</p>`;
+        container.innerHTML =
+            `<p class="empty-message">No events available.</p>`;
         return;
     }
 
@@ -237,6 +250,7 @@ function renderEventList(containerId, list) {
             >
 
             <div class="event-card-content">
+
                 <span class="event-category">
                     ${escapeHTML(event.category)}
                 </span>
@@ -248,14 +262,18 @@ function renderEventList(containerId, list) {
                 </p>
 
                 <div class="event-card-bottom">
+
                     <div class="price">
                         ${money(event.price)}
                         <small>Starting price</small>
                     </div>
 
-                    <button class="book-btn" onclick="openEvent(${event.id})">
+                    <button
+                        class="book-btn"
+                        onclick="openEvent(${Number(event.id)})">
                         Book Now →
                     </button>
+
                 </div>
             </div>
         </div>
@@ -274,8 +292,8 @@ function filterEvents(inputId, containerId, category) {
     );
 
     filtered = filtered.filter(event =>
-        event.name?.toLowerCase().includes(search) ||
-        event.venue?.toLowerCase().includes(search)
+        String(event.name || "").toLowerCase().includes(search) ||
+        String(event.venue || "").toLowerCase().includes(search)
     );
 
     if (category === "movie") {
@@ -283,8 +301,8 @@ function filterEvents(inputId, containerId, category) {
 
         if (genre && genre !== "all") {
             filtered = filtered.filter(event =>
-                String(event.category).toLowerCase().includes(genre.toLowerCase()) ||
-                String(event.description).toLowerCase().includes(genre.toLowerCase())
+                String(event.category || "").toLowerCase().includes(genre.toLowerCase()) ||
+                String(event.description || "").toLowerCase().includes(genre.toLowerCase())
             );
         }
     }
@@ -301,9 +319,9 @@ function searchEvents() {
     }
 
     const filtered = events.filter(event =>
-        event.name?.toLowerCase().includes(search) ||
-        event.category?.toLowerCase().includes(search) ||
-        event.venue?.toLowerCase().includes(search)
+        String(event.name || "").toLowerCase().includes(search) ||
+        String(event.category || "").toLowerCase().includes(search) ||
+        String(event.venue || "").toLowerCase().includes(search)
     );
 
     showPage("movies");
@@ -316,8 +334,14 @@ function searchEvents() {
 
 async function openEvent(id) {
     try {
-        const event = await apiRequest(API.event(id));
-        const dates = await apiRequest(API.dates(id));
+        const [event, dates] = await Promise.all([
+            apiRequest(API.event(id)),
+            apiRequest(API.dates(id))
+        ]);
+
+        if (!event) {
+            throw new Error("Event not found.");
+        }
 
         event.dates = Array.isArray(dates) ? dates : [];
 
@@ -326,6 +350,7 @@ async function openEvent(id) {
         selectedTime = null;
         selectedSeats = [];
         availableSeats = [];
+        currentBooking = null;
 
         previousPage = "home";
 
@@ -333,7 +358,7 @@ async function openEvent(id) {
         showPage("eventDetails");
 
     } catch (error) {
-        console.error(error);
+        console.error("Unable to open event:", error);
         showToast(error.message || "Unable to open event.", "error");
     }
 }
@@ -346,10 +371,12 @@ function renderEventDetails() {
     if (!selectedEvent) return;
 
     const container = $("eventDetailContent");
+
     if (!container) return;
 
     container.innerHTML = `
         <div class="event-detail-card">
+
             <div>
                 <img
                     class="detail-image"
@@ -360,6 +387,7 @@ function renderEventDetails() {
             </div>
 
             <div class="detail-info">
+
                 <span class="event-category">
                     ${escapeHTML(selectedEvent.category)}
                 </span>
@@ -384,9 +412,11 @@ function renderEventDetails() {
                 <div class="date-list" id="dateList"></div>
 
                 <h3 class="selection-heading">Select a time</h3>
+
                 <div class="slot-list" id="slotList">
                     <p class="muted">Select a date first.</p>
                 </div>
+
             </div>
         </div>
     `;
@@ -396,6 +426,7 @@ function renderEventDetails() {
 
 function renderDates() {
     const container = $("dateList");
+
     if (!container) return;
 
     const dates = selectedEvent?.dates || [];
@@ -410,7 +441,9 @@ function renderDates() {
         const parsedDate = parseLocalDate(date);
 
         const weekday = parsedDate
-            ? parsedDate.toLocaleDateString("en-IN", { weekday: "short" })
+            ? parsedDate.toLocaleDateString("en-IN", {
+                weekday: "short"
+            })
             : "";
 
         return `
@@ -431,16 +464,20 @@ function renderDates() {
 // --------------------------------
 
 async function selectDate(date) {
+    if (!selectedEvent) return;
+
     selectedDate = date;
     selectedTime = null;
     selectedSeats = [];
+    availableSeats = [];
 
     renderDates();
 
     const slotList = $("slotList");
 
     if (slotList) {
-        slotList.innerHTML = `<p class="muted">Loading time slots...</p>`;
+        slotList.innerHTML =
+            `<p class="muted">Loading time slots...</p>`;
     }
 
     try {
@@ -448,10 +485,12 @@ async function selectDate(date) {
             API.slots(selectedEvent.id, date)
         );
 
+        if (selectedDate !== date) return;
+
         renderSlots(slots);
 
     } catch (error) {
-        console.error(error);
+        console.error("Unable to load time slots:", error);
 
         if (slotList) {
             slotList.innerHTML =
@@ -464,6 +503,7 @@ async function selectDate(date) {
 
 function renderSlots(slots) {
     const container = $("slotList");
+
     if (!container) return;
 
     if (!Array.isArray(slots) || slots.length === 0) {
@@ -474,6 +514,8 @@ function renderSlots(slots) {
 
     container.innerHTML = slots.map(slot => {
         const time = typeof slot === "string" ? slot : slot.time;
+
+        if (!time) return "";
 
         return `
             <button
@@ -492,8 +534,11 @@ function renderSlots(slots) {
 // --------------------------------
 
 async function selectTime(time) {
+    if (!selectedEvent || !selectedDate || !time) return;
+
     selectedTime = time;
     selectedSeats = [];
+    availableSeats = [];
 
     document.querySelectorAll(".slot-option").forEach(button => {
         button.classList.toggle(
@@ -503,6 +548,7 @@ async function selectTime(time) {
     });
 
     await loadSeats();
+
     showPage("seatPage");
 }
 
@@ -512,24 +558,35 @@ async function loadSeats() {
     const container = $("seatContainer");
 
     if (container) {
-        container.innerHTML = `<p class="muted">Loading seats...</p>`;
+        container.innerHTML =
+            `<p class="muted">Loading seats...</p>`;
     }
 
+    const requestedEvent = selectedEvent.id;
+    const requestedDate = selectedDate;
+    const requestedTime = selectedTime;
+
     try {
-        availableSeats = await apiRequest(
-            API.seats(selectedEvent.id, selectedDate, selectedTime)
+        const result = await apiRequest(
+            API.seats(requestedEvent, requestedDate, requestedTime)
         );
 
-        if (!Array.isArray(availableSeats)) {
-            availableSeats = [];
+        if (
+            selectedEvent?.id !== requestedEvent ||
+            selectedDate !== requestedDate ||
+            selectedTime !== requestedTime
+        ) {
+            return;
         }
+
+        availableSeats = Array.isArray(result) ? result : [];
 
         console.log("Seat API response:", availableSeats);
 
         renderSeats();
 
     } catch (error) {
-        console.error(error);
+        console.error("Unable to load seats:", error);
 
         if (container) {
             container.innerHTML =
@@ -546,11 +603,13 @@ async function loadSeats() {
 
 function renderSeats() {
     const container = $("seatContainer");
+
     if (!container) return;
 
     if (availableSeats.length === 0) {
         container.innerHTML =
             `<p class="muted">No seats available for this slot.</p>`;
+
         updateSeatSummary();
         return;
     }
@@ -558,7 +617,7 @@ function renderSeats() {
     const rows = {};
 
     availableSeats.forEach(seat => {
-        const seatNumber = String(seat.seatNumber);
+        const seatNumber = String(seat.seatNumber || "");
         const row = seatNumber.match(/^[A-Za-z]+/)?.[0] || "A";
 
         if (!rows[row]) {
@@ -577,13 +636,19 @@ function renderSeats() {
             String(a.seatNumber).localeCompare(
                 String(b.seatNumber),
                 undefined,
-                { numeric: true, sensitivity: "base" }
+                {
+                    numeric: true,
+                    sensitivity: "base"
+                }
             )
         );
 
         return `
             <div class="seat-row">
-                <span class="row-label">${escapeHTML(row)}</span>
+
+                <span class="row-label">
+                    ${escapeHTML(row)}
+                </span>
 
                 ${sortedSeats.map(seat => {
             const number = String(seat.seatNumber);
@@ -617,6 +682,7 @@ function renderSeats() {
                         </button>
                     `;
         }).join("")}
+
             </div>
         `;
     }).join("");
@@ -695,6 +761,11 @@ function updateSeatSummary() {
 // --------------------------------
 
 function goToCustomer() {
+    if (!selectedEvent || !selectedDate || !selectedTime) {
+        showToast("Please select an event, date and time.", "error");
+        return;
+    }
+
     if (selectedSeats.length === 0) {
         showToast("Please select at least one seat.", "error");
         return;
@@ -706,7 +777,8 @@ function goToCustomer() {
 
 function renderCheckoutSummary() {
     const container = $("checkoutSummary");
-    if (!container) return;
+
+    if (!container || !selectedEvent) return;
 
     container.innerHTML = `
         <div class="checkout-line">
@@ -748,43 +820,78 @@ function renderCheckoutSummary() {
 async function confirmBooking(event) {
     event.preventDefault();
 
-    const name = $("customerName").value.trim();
-    const email = $("customerEmail").value.trim();
-    const phone = $("customerPhone").value.trim();
+    const name = $("customerName")?.value.trim() || "";
+    const email = $("customerEmail")?.value.trim() || "";
+    const phone = $("customerPhone")?.value.trim() || "";
+
     const error = $("formError");
     const button = $("confirmBtn");
 
+    if (!selectedEvent || !selectedDate || !selectedTime) {
+        if (error) {
+            error.textContent = "Please select an event, date and time.";
+        }
+        return;
+    }
+
+    if (selectedSeats.length === 0) {
+        if (error) {
+            error.textContent = "Please select at least one seat.";
+        }
+        return;
+    }
+
     if (!name || !email || !phone) {
-        error.textContent = "Please fill in all details.";
+        if (error) {
+            error.textContent = "Please fill in all details.";
+        }
+        return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (error) {
+            error.textContent = "Enter a valid email address.";
+        }
         return;
     }
 
     if (!/^[6-9]\d{9}$/.test(phone)) {
-        error.textContent = "Enter a valid 10-digit mobile number.";
+        if (error) {
+            error.textContent = "Enter a valid 10-digit mobile number.";
+        }
         return;
     }
 
-    error.textContent = "";
-    button.disabled = true;
-    button.textContent = "Processing...";
+    if (error) error.textContent = "";
 
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Processing...";
+    }
+
+    // These names must match BookingController.BookingRequest.
     const bookingData = {
         customerName: name,
-        email: email,
-        phone: phone,
+        customerEmail: email,
+        customerPhone: phone,
         eventId: selectedEvent.id,
         eventDate: selectedDate,
         eventTime: selectedTime,
-        selectedSeats: selectedSeats,
-        ticketQuantity: selectedSeats.length,
-        totalPrice: getTotalPrice()
+        selectedSeats: [...selectedSeats]
     };
 
     try {
-        currentBooking = await apiRequest(API.bookings, {
+        // IMPORTANT: Submit only ONCE.
+        const result = await apiRequest(API.bookings, {
             method: "POST",
             body: JSON.stringify(bookingData)
         });
+
+        if (!result) {
+            throw new Error("The server returned an empty booking response.");
+        }
+
+        currentBooking = result;
 
         renderReceipt(currentBooking);
         showPage("receiptPage");
@@ -792,16 +899,23 @@ async function confirmBooking(event) {
         showToast("Booking confirmed successfully!");
 
     } catch (err) {
-        console.error(err);
+        console.error("Booking failed:", err);
 
-        error.textContent =
-            err.message || "Booking failed. Please try again.";
+        if (error) {
+            error.textContent =
+                err.message || "Booking failed. Please try again.";
+        }
 
-        showToast("Unable to complete booking.", "error");
+        showToast(
+            err.message || "Unable to complete booking.",
+            "error"
+        );
 
     } finally {
-        button.disabled = false;
-        button.textContent = "Confirm Booking →";
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Confirm Booking →";
+        }
     }
 }
 
@@ -821,23 +935,36 @@ function normalizeSeats(seats) {
 
 function renderReceipt(booking) {
     const container = $("receiptContent");
+
     if (!container) return;
 
     const seats = normalizeSeats(booking.selectedSeats);
 
+    const bookingId = booking.id || booking.bookingId || "";
+
+    const customerEmail =
+        booking.customerEmail || booking.email || "";
+
+    const ticketQuantity =
+        booking.ticketQuantity ?? seats.length;
+
     container.innerHTML = `
         <div class="receipt-top">
+
             <div>
                 <h3>TICKET HUB</h3>
+
                 <p class="receipt-id">
-                    Booking ID: #${escapeHTML(booking.id || booking.bookingId || "")}
+                    Booking ID: #${escapeHTML(bookingId)}
                 </p>
             </div>
 
             <div class="qr-placeholder">TICKET</div>
+
         </div>
 
         <div class="receipt-details">
+
             <div class="receipt-item">
                 <span>Customer name</span>
                 <strong>${escapeHTML(booking.customerName)}</strong>
@@ -845,7 +972,7 @@ function renderReceipt(booking) {
 
             <div class="receipt-item">
                 <span>Email</span>
-                <strong>${escapeHTML(booking.email || booking.customerEmail)}</strong>
+                <strong>${escapeHTML(customerEmail)}</strong>
             </div>
 
             <div class="receipt-item">
@@ -870,17 +997,18 @@ function renderReceipt(booking) {
 
             <div class="receipt-item">
                 <span>Number of tickets</span>
-                <strong>${escapeHTML(booking.ticketQuantity || seats.length)}</strong>
+                <strong>${escapeHTML(ticketQuantity)}</strong>
             </div>
 
             <div class="receipt-item">
                 <span>Status</span>
                 <strong class="receipt-status">CONFIRMED</strong>
             </div>
+
         </div>
 
         <div class="receipt-total">
-            <span>Total paid</span>
+            <span>Total</span>
             <span>${money(booking.totalPrice)}</span>
         </div>
     `;
@@ -900,14 +1028,18 @@ function downloadReceipt() {
 // --------------------------------
 
 async function loadBookings() {
-    const email = $("bookingEmail").value.trim();
+    const email = $("bookingEmail")?.value.trim() || "";
     const list = $("bookingList");
     const message = $("bookingMessage");
 
     if (!email) {
-        message.textContent = "Enter your booking email.";
+        if (message) {
+            message.textContent = "Enter your booking email.";
+        }
         return;
     }
+
+    if (!list || !message) return;
 
     message.textContent = "Loading bookings...";
     list.innerHTML = "";
@@ -918,19 +1050,23 @@ async function loadBookings() {
         );
 
         if (!Array.isArray(bookings) || bookings.length === 0) {
-            message.textContent = "No bookings found for this email.";
+            message.textContent =
+                "No bookings found for this email.";
             return;
         }
 
-        message.textContent = `${bookings.length} booking(s) found.`;
+        message.textContent =
+            `${bookings.length} booking(s) found.`;
 
         list.innerHTML = bookings.map(booking => {
             const seats = normalizeSeats(booking.selectedSeats);
+
             const eventName = booking.event?.name || "Event";
             const image = booking.event?.imageUrl || "";
 
             return `
                 <div class="booking-card">
+
                     <img
                         src="${escapeHTML(image)}"
                         alt="${escapeHTML(eventName)}"
@@ -939,23 +1075,46 @@ async function loadBookings() {
 
                     <div>
                         <h3>${escapeHTML(eventName)}</h3>
-                        <p>Booking ID: #${escapeHTML(booking.id || booking.bookingId || "")}</p>
-                        <p>Date: ${escapeHTML(formatDate(booking.eventDate || ""))}</p>
-                        <p>Time: ${escapeHTML(formatBookingTime(booking.eventTime || ""))}</p>
-                        <p>Seats: ${escapeHTML(seats.join(", "))}</p>
-                        <p>Total: ${money(booking.totalPrice)}</p>
+
+                        <p>
+                            Booking ID:
+                            #${escapeHTML(booking.id || booking.bookingId || "")}
+                        </p>
+
+                        <p>
+                            Date:
+                            ${escapeHTML(formatDate(booking.eventDate || ""))}
+                        </p>
+
+                        <p>
+                            Time:
+                            ${escapeHTML(formatBookingTime(booking.eventTime || ""))}
+                        </p>
+
+                        <p>
+                            Seats:
+                            ${escapeHTML(seats.join(", "))}
+                        </p>
+
+                        <p>
+                            Total:
+                            ${money(booking.totalPrice)}
+                        </p>
                     </div>
 
                     <div>
                         <span class="booking-status">CONFIRMED</span>
                     </div>
+
                 </div>
             `;
         }).join("");
 
     } catch (error) {
-        console.error(error);
-        message.textContent = error.message || "Unable to load bookings.";
+        console.error("Unable to load bookings:", error);
+
+        message.textContent =
+            error.message || "Unable to load bookings.";
     }
 }
 
@@ -999,6 +1158,7 @@ function setupSearch() {
 
     $("homeSearch")?.addEventListener("keydown", event => {
         if (event.key === "Enter") {
+            event.preventDefault();
             searchEvents();
         }
     });
@@ -1012,7 +1172,10 @@ document.addEventListener("DOMContentLoaded", () => {
     setupNavigation();
     setupSearch();
 
-    $("customerForm")?.addEventListener("submit", confirmBooking);
+    $("customerForm")?.addEventListener(
+        "submit",
+        confirmBooking
+    );
 
     loadEvents();
 });
