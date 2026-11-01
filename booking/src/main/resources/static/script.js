@@ -8,7 +8,7 @@ const API = {
     slots: (id, date) =>
         `${API_BASE_URL}/api/events/${id}/slots?date=${encodeURIComponent(date)}`,
     seats: (id, date, time) =>
-        `${API_BASE_URL}/seats/availability?eventId=${id}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
+        `${API_BASE_URL}/api/seats/availability?eventId=${id}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
     bookings: `${API_BASE_URL}/bookings`,
     booking: id => `${API_BASE_URL}/bookings/${id}`,
     customerBookings: email =>
