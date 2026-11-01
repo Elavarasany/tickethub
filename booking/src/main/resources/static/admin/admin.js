@@ -677,6 +677,7 @@ async function openAddRecordForm() {
 // ======================================
 
 
+
 function createInput(column) {
     const name = column.toLowerCase();
 
@@ -687,7 +688,6 @@ function createInput(column) {
     input.name = column;
     input.dataset.column = column;
 
-    // Image and URL fields
     if (
         name.includes("image") ||
         name.includes("url") ||
@@ -695,8 +695,6 @@ function createInput(column) {
     ) {
         input.type = "text";
         input.placeholder = "Enter image URL";
-        input.readOnly = false;
-        input.disabled = false;
 
     } else if (isDateColumn(column)) {
         input.type = "text";
@@ -716,7 +714,7 @@ function createInput(column) {
         name.includes("price") ||
         name.includes("amount") ||
         name.includes("quantity") ||
-        name.includes("age")
+        name === "age"
     ) {
         input.type = "number";
         input.step = "any";
@@ -727,6 +725,7 @@ function createInput(column) {
 
     return input;
 }
+
 
 
 // ======================================
