@@ -1165,7 +1165,7 @@ function setupSearch() {
 }
 
 // --------------------------------
-// INITIALIZE WEBSITE
+// INITIALIZE WEBSITE xxx
 // --------------------------------
 
 document.addEventListener("DOMContentLoaded", () => {
