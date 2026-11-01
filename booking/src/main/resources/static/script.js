@@ -2,17 +2,17 @@
 const API_BASE_URL = window.location.origin;
 
 const API = {
-    events: `${API_BASE}/events`,
-    event: id => `${API_BASE}/events/${id}`,
-    dates: id => `${API_BASE}/events/${id}/dates`,
+    events: `${API_BASE_URL}/events`,
+    event: id => `${API_BASE_URL}/events/${id}`,
+    dates: id => `${API_BASE_URL}/events/${id}/dates`,
     slots: (id, date) =>
-        `${API_BASE}/events/${id}/slots?date=${encodeURIComponent(date)}`,
+        `${API_BASE_URL}/events/${id}/slots?date=${encodeURIComponent(date)}`,
     seats: (id, date, time) =>
-        `${API_BASE}/seats/availability?eventId=${id}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
-    bookings: `${API_BASE}/bookings`,
-    booking: id => `${API_BASE}/bookings/${id}`,
+        `${API_BASE_URL}/seats/availability?eventId=${id}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
+    bookings: `${API_BASE_URL}/bookings`,
+    booking: id => `${API_BASE_URL}/bookings/${id}`,
     customerBookings: email =>
-        `${API_BASE}/bookings?email=${encodeURIComponent(email)}`
+        `${API_BASE_URL}/bookings?email=${encodeURIComponent(email)}`
 };
 
 let events = [];
