@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Ticket Hub</title>
+    <link rel="stylesheet" href="/admin/login.css">
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">
+        <h1>TICKET HUB</h1>
+        <p class="subtitle">ADMINISTRATOR LOGIN</p>
+
+        <form id="loginForm">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password" required>
+
+            <button type="submit" id="loginBtn">Login</button>
+            <p id="message"></p>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const message = document.getElementById("message");
+        const button = document.getElementById("loginBtn");
+
+        button.disabled = true;
+        button.textContent = "Logging in...";
+        message.textContent = "";
+
+        try {
+            const response = await fetch("/api/admin/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: document.getElementById("username").value,
+                    password: document.getElementById("password").value
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                window.location.href = "/admin/admin.html";
+            } else {
+                message.textContent = result.message || "Invalid login";
+            }
+        } catch (error) {
+            message.textContent = "Unable to connect to server";
+        }
+
+        button.disabled = false;
+        button.textContent = "Login";
+    });
+</script>
+
+</body>
+</html>
